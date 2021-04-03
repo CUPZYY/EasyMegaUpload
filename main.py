@@ -1,8 +1,9 @@
 import os
+import threading
+
 from cryptography.fernet import Fernet
 from sys import exit
 import sys
-import multiprocessing
 import gui
 import loginGUI
 
@@ -13,6 +14,7 @@ from mega import errors
 
 mega = Mega()
 toaster = win10toast.ToastNotifier()
+gui = gui.guiClass()
 filepath = sys.argv[1]
 uploading = False
 
@@ -86,12 +88,7 @@ def unsuccessToaster():
                        threaded=True)
 
 
-if __name__ == "__main__":
-    guiProcess = multiprocessing.Process(target=gui.gui)
-    guiProcess.start()
-
-
-def uploading(guiProcessPar):
+def upload():
     try:
         emailencoded = loginread[0].encode()
         passencoded = loginread[1].encode()
@@ -102,8 +99,7 @@ def uploading(guiProcessPar):
         m = mega.login(email=str(emaildecoded), password=str(passdecoded))
     except errors.RequestError:
         passToaster()
-        guiProcessPar.terminate()
-        exit()
+        return
     folderName = "EasyUpload"
     findfolder = m.find(folderName)
     if findfolder is None:
@@ -113,13 +109,14 @@ def uploading(guiProcessPar):
         fileurl = m.get_upload_link(file)
     except:
         unsuccessToaster()
-        guiProcessPar.terminate()
-        exit()
+        return
     pyperclip.copy(fileurl)
     successToaster()
-    guiProcessPar.terminate()
+    return
 
 
-if __name__ == "__main__":
-    uploadingProcess = multiprocessing.Process(target=uploading(guiProcessPar=guiProcess))
-    uploadingProcess.start()
+uplfoadThread = threading.Thread(target=gui.gui)
+uplfoadThread.setDaemon(True)
+uplfoadThread.start()
+upload()
+exit()
