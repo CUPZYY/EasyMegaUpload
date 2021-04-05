@@ -7,20 +7,22 @@ import os
 
 def loginGUI():
     mega = Mega()
+    appdata = os.getenv('APPDATA')
+    appdataFolder = f"{appdata}\\EasyMegaUpload"
 
     try:
-        open("key", "r").read().splitlines()
+        open(fr"{appdataFolder}\key", "r").read().splitlines()
     except FileNotFoundError:
-        open("key", "w+")
+        open(fr"{appdataFolder}\key", "w+")
 
-    if os.stat("key").st_size == 0:
+    if os.stat(fr"{appdataFolder}\key").st_size == 0:
         key = Fernet.generate_key()
         print(type(key))
-        keyWrite = open("key", "wb")
+        keyWrite = open(fr"{appdataFolder}\key", "wb")
         keyWrite.write(key)
         keyWrite.close()
     else:
-        key = open("key", "rb", ).read()
+        key = open(fr"{appdataFolder}\key", "rb", ).read()
 
     f = Fernet(bytes(key))
 
@@ -70,14 +72,14 @@ def loginGUI():
                 password_entry.config(state=DISABLED)
                 email_entry.config(state=DISABLED)
                 try:
-                    open("login", "r").read().splitlines()
+                    open(fr"{appdataFolder}\login", "r").read().splitlines()
                 except FileNotFoundError:
-                    open("login", "w+")
+                    open(fr"{appdataFolder}\login", "w+")
                 encodedEmail = email_info.encode()
                 encryptedEmail = f.encrypt(encodedEmail)
                 encodedPass = password_info.encode()
                 encryptedPass = f.encrypt(encodedPass)
-                writeLoginB1 = open("login", "wb")
+                writeLoginB1 = open(fr"{appdataFolder}\login", "wb")
                 writeLoginB1.write(encryptedEmail)
                 writeLoginB1.write("\n".encode())
                 writeLoginB1.write(encryptedPass)

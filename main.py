@@ -1,9 +1,9 @@
 import os
 import threading
 
+import argparse
 from cryptography.fernet import Fernet
 from sys import exit
-import sys
 import gui
 import loginGUI
 
@@ -11,44 +11,59 @@ import pyperclip
 import win10toast
 from mega import Mega
 from mega import errors
+import pathlib
 
 mega = Mega()
 toaster = win10toast.ToastNotifier()
 gui = gui.guiClass()
-filepath = sys.argv[1]
 uploading = False
+appdata = os.getenv('APPDATA')
+appdataFolder = f"{appdata}\\EasyMegaUpload"
+
+#if len(sys.argv) > 1:
+#   filepath = sys.argv[1]
+#   print(filepath)
+#else:
+#    filepath = sys.argv[0]
+
+if not os.path.exists(appdataFolder):
+    os.mkdir(appdataFolder)
+
+
+parser = argparse.ArgumentParser(description="Uploads files to mega, easily")
+parser.add_argument("-p", "--path", type=str, metavar="", help="The filepath to the file you want to upload", required=True)
+args = parser.parse_args()
+
+
+filepath = args.path
 
 try:
-    loginread = open("login", "r").read().splitlines()
+    loginread = open(fr"{appdataFolder}\login", "r").read().splitlines()
 except FileNotFoundError:
     loginGUI.loginGUI()
     exit()
 
-if os.stat("login").st_size == 0:
+if os.stat(fr"{appdataFolder}\login").st_size == 0:
     loginGUI.loginGUI()
     exit()
 
 
 def init():
     try:
-        sys.argv[1]
-    except IndexError:
-        raise IndexError("No file to upload")
-    try:
         loginread[1]
     except IndexError:
         loginGUI.loginGUI()
         exit()
     try:
-        open("key", "r").read().splitlines()
+        open(fr"{appdataFolder}\key", "r").read().splitlines()
     except FileNotFoundError:
         loginGUI.loginGUI()
         exit()
-    if os.stat("key").st_size == 0:
+    if os.stat(fr"{appdataFolder}\key").st_size == 0:
         loginGUI.loginGUI()
         exit()
     else:
-        key = open("key", "rb", ).read()
+        key = open(fr"{appdataFolder}\key", "rb", ).read()
     global f
     f = Fernet(bytes(key))
 
