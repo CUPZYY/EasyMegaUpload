@@ -4,14 +4,38 @@ import threading
 import argparse
 from cryptography.fernet import Fernet
 from sys import exit
+from packaging import version
+from tkinter import messagebox
+import sys
 import gui
 import loginGUI
+import requests
+import webbrowser
+from tkinter import Tk
 
 import pyperclip
 import win10toast
 from mega import Mega
 from mega import errors
-import pathlib
+
+if getattr(sys, 'frozen', False):
+    VERSION = open("VERSION", "r").read().splitlines()
+    versionFile = requests.get(
+        r"https://raw.githubusercontent.com/CUPZYY/EasyMegaUpload/main/VERSION").text.splitlines()
+    var = version.parse(VERSION[0]) < version.parse(versionFile[0])
+    if var:
+        root = Tk()
+        root.withdraw()
+        root.protocol("WM_DELETE_WINDOW", exit)
+        versionFile = requests.get(
+            r"https://raw.githubusercontent.com/CUPZYY/EasyMegaUpload/main/VERSION").text.splitlines()
+        updatePrompt = messagebox.askquestion("Update Available!",
+                                              f"There is a newer version of the program available (v{versionFile[0]}). Would you like to download it now?")
+        if updatePrompt[0] == "y":
+            webbrowser.open(versionFile[1])
+            exit()
+        else:
+            exit()
 
 mega = Mega()
 toaster = win10toast.ToastNotifier()
@@ -20,20 +44,19 @@ uploading = False
 appdata = os.getenv('APPDATA')
 appdataFolder = f"{appdata}\\EasyMegaUpload"
 
-#if len(sys.argv) > 1:
+# if len(sys.argv) > 1:
 #   filepath = sys.argv[1]
 #   print(filepath)
-#else:
+# else:
 #    filepath = sys.argv[0]
 
 if not os.path.exists(appdataFolder):
     os.mkdir(appdataFolder)
 
-
 parser = argparse.ArgumentParser(description="Uploads files to mega, easily")
-parser.add_argument("-p", "--path", type=str, metavar="", help="The filepath to the file you want to upload", required=True)
+parser.add_argument("-p", "--path", type=str, metavar="", help="The filepath to the file you want to upload",
+                    required=True)
 args = parser.parse_args()
-
 
 filepath = args.path
 
